@@ -126,3 +126,5 @@ class AnimToolsInterface(QWidget):
 
 def main():
     ui = dock_window(AnimToolsInterface)
+    return ui
+
