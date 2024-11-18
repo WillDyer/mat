@@ -13,4 +13,7 @@ class reset_values():
 
     def zero_value(self, ctrl, keyable_attrs):
         for attr in keyable_attrs:
-            cmds.setAttr(f"{self.ctrl}.{attr}", 0)
+            if any(blacklist_attr in attr for blacklist_attr in ["scaleX", "scaleY", "scaleZ", "visibility"]):
+                continue
+            else:
+                cmds.setAttr(f"{ctrl}.{attr}", 0)

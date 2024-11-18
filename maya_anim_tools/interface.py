@@ -1,5 +1,14 @@
+import weakref
+import os
+import sys
+import importlib
+
+import maya.cmds as cmds
+import maya.mel as mel
+import maya.OpenMayaUI as omui
+
 try:
-    from PySide6.QtCore import Qt
+    from PySide6 import QtCore
     from PySide6.QtGui import QIcon
     from PySide6.QtWidgets import (QWidget,
                                    QVBoxLayout,
@@ -11,7 +20,7 @@ try:
                                    QLineEdit)
     from shiboken6 import wrapInstance
 except ModuleNotFoundError:
-    from PySide2.QtCore import Qt
+    from PySide2 import QtCore
     from PySide2.QtGui import QIcon
     from PySide2.QtWidgets import (QWidget,
                                    QVBoxLayout,
@@ -23,62 +32,98 @@ except ModuleNotFoundError:
                                    QLineEdit)
     from shiboken2 import wrapInstance
 
-import maya.cmds as cmds
-import maya.mel as mel
-from maya import OpenMayaUI as omui
-
-# module imports
 from user_interface.pages import buttons
 
-mayaMainWindowPtr = omui.MQtUtil.mainWindow()
-mayaMainWindow = wrapInstance(int(mayaMainWindowPtr), QWidget)
+module_list = [buttons]
+for module in module_list:
+    importlib.reload(module)
 
-class Interface(QWidget):
-    def __init__(self, *args, **kwargs):
-        super(Interface, self).__init__(*args, **kwargs)
-        self.start_ui()
+def dock_window(dialog_class):
+    try: cmds.deleteUI(dialog_class.CONTROL_NAME)
+    except: pass
+
+    TIME_SLIDER = mel.eval('getUIComponentToolBar("Time Slider", false)')
+
+    main_control = cmds.workspaceControl(dialog_class.CONTROL_NAME,
+                                         dtm=["bottom", False],
+                                         ih=50,
+                                         li=True,
+                                         hp="fixed",
+                                         tp=["east", True],
+                                         floating=False,
+                                         label = dialog_class.DOCK_LABEL_NAME
+                                         )
+    cmds.workspaceControl(dialog_class.CONTROL_NAME, edit=True, dtc=(TIME_SLIDER, "top"))
+    
+    control_widget = omui.MQtUtil.findControl(dialog_class.CONTROL_NAME)
+    control_wrap = wrapInstance(int(control_widget), QWidget)
+    
+    control_wrap.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+    win = dialog_class(control_wrap)
+    
+    cmds.evalDeferred(lambda *args: cmds.workspaceControl(main_control, e=True, rs=True))
+    print("Inteface docked...")
+    return win.run()
+
+
+class AnimToolsInterface(QWidget):
+    instances = list()
+    CONTROL_NAME = '12_Tools'
+    DOCK_LABEL_NAME = '12 Tools'
+
+    def __init__(self, parent=None):
+        super(AnimToolsInterface, self).__init__(parent)
+
+        # let's keep track of our docks so we only have one at a time.    
+        AnimToolsInterface.delete_instances()
+        self.__class__.instances.append(weakref.proxy(self))
+
+        self.window_name = self.CONTROL_NAME
+        self.ui = parent
+        self.main_layout = parent.layout()
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.init_ui()
+        self.init_style()
+        print("Interface built...")
 
     def init_ui(self):
-        self.setWindowTitle("12 Tools")
-
-        # Set size policies
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.widget = QWidget(self)
+        self.widget = QWidget()
+        self.widget.setContentsMargins(5, 5, 5, 5)
         self.widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        # Set layout
-        self.horizontal_layout = QHBoxLayout(self.widget)
-        self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
-        self.horizontal_layout.setSpacing(5)
+        """self.horizontal_layout = QHBoxLayout(self.widget)
+        self.horizontal_layout.setContentsMargins(5, 5, 5, 5)
+        self.horizontal_layout.setSpacing(5)"""
 
-        # Add a test button
-        button = QPushButton("Test")
-        button.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Preferred)
-        self.horizontal_layout.addWidget(button)
+        buttons_instance = buttons.CreateButtons(parent_widget=self.widget)
 
-        # Embed widget
-        main_layout = QVBoxLayout(self)
-        main_layout.addWidget(self.widget)
-        self.setLayout(main_layout)
-
-def start_ui():
-    Workspacename = "12_tools"
-    DEBUG = True
-    TIME_SLIDER = mel.eval('getUIComponentToolBar("Time Slider", false)')
-    
-    if DEBUG is True and cmds.workspaceControl(Workspacename, query=True, exists=True) is True:
-        cmds.deleteUI(Workspacename)
-        print("DEBUG: deleted UI")
-
-    if cmds.workspaceControl(Workspacename, query=True, exists=True) is False:
-        cmds.workspaceControl(Workspacename,dtm=["bottom", False], ih=200, li=True, hp="fixed", tp=["east", True], floating=False, uiScript="") # RUN THIS FROM MAIN OR SOMETHING AND SHOULD BE LIKE IMPORT THIS SCRIPT
-        cmds.workspaceControl(Workspacename, edit=True, dtc=( TIME_SLIDER ,"top"))
+        #horizontal_layout = QVBoxLayout(self)
+        #horizontal_layout.addWidget(self.widget)
         
-        print("Interface built...")
-    else:
-        cmds.workspaceControl(Workspacename, edit=True, restore=True)
-        print("Interface restored...")
+        self.main_layout.addWidget(self.widget)
+
+    def init_style(self):
+        stylesheet_path = os.path.join(os.path.dirname(os.path.abspath(__file__)),"user_interface","style","style.css")
+        with open(stylesheet_path, "r") as file:
+            stylesheet = file.read()
+        self.ui.setStyleSheet(stylesheet)
+
+    @staticmethod
+    def delete_instances():
+        for ins in AnimToolsInterface.instances:
+            try:
+                ins.setParent(None)
+                ins.deleteLater()
+            except:
+                # ignore the actual parent has already been deleted by Maya
+                pass
+
+            AnimToolsInterface.instances.remove(ins)
+            del ins
+
+    def run(self):
+        return self
+
 
 def main():
-    ui = start_ui()
-    return ui
+    ui = dock_window(AnimToolsInterface)
