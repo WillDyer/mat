@@ -73,8 +73,7 @@ class AnimToolsInterface(QWidget):
 
     def __init__(self, parent=None):
         super(AnimToolsInterface, self).__init__(parent)
-
-        # let's keep track of our docks so we only have one at a time.    
+   
         AnimToolsInterface.delete_instances()
         self.__class__.instances.append(weakref.proxy(self))
 

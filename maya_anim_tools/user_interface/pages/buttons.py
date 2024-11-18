@@ -11,7 +11,8 @@ try:
                                    QScrollArea,
                                    QLabel,
                                    QSizePolicy,
-                                   QLineEdit)
+                                   QLineEdit,
+                                   QSpacerItem)
 except ModuleNotFoundError:
     from PySide2.QtCore import Qt, QSize, QObject, SIGNAL
     from PySide2.QtGui import QIcon
@@ -22,7 +23,8 @@ except ModuleNotFoundError:
                                    QScrollArea,
                                    QLabel,
                                    QSizePolicy,
-                                   QLineEdit)
+                                   QLineEdit,
+                                   QSpacerItem)
 
 from tools import reset_default
 
@@ -40,7 +42,15 @@ class CreateButtons(QWidget):
         else:
             raise TypeError(f"Expectec self.interface to be a QWidget but got {type(self.interface)}")
         
+        L_spacer = QSpacerItem(20,40,QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.button_layout.addSpacerItem(L_spacer)
+
         self.default_values()
+        self.copy_pos()
+        self.paste_pos()
+
+        R_spacer = QSpacerItem(20,40,QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.button_layout.addSpacerItem(R_spacer)
 
     def default_values(self):
         default_value = QPushButton()
@@ -50,4 +60,19 @@ class CreateButtons(QWidget):
         default_value.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(default_value)
         QObject.connect(default_value, SIGNAL("clicked()"), lambda: reset_default.reset_values())
+    
+    def copy_pos(self):
+        copy_position = QPushButton()
+        copy_position.setObjectName("button_copyposition")
+        copy_position.setIcon(QIcon(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'copy.png')))
+        copy_position.setIconSize(QSize(25,25))
+        copy_position.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.button_layout.addWidget(copy_position)
 
+    def paste_pos(self):
+        paste_position = QPushButton()
+        paste_position.setObjectName("button_pasteposition")
+        paste_position.setIcon(QIcon(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images', 'paste.png')))
+        paste_position.setIconSize(QSize(25,25))
+        paste_position.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.button_layout.addWidget(paste_position)
