@@ -26,9 +26,9 @@ except ModuleNotFoundError:
                                    QLineEdit,
                                    QSpacerItem)
 
-from tools import reset_default
+from tools import reset_default, clipboard
 
-module_list = [reset_default]
+module_list = [reset_default, clipboard]
 for module in module_list:
     importlib.reload(module)
 
@@ -37,11 +37,13 @@ class CreateButtons(QWidget):
     def __init__(self, parent_widget):
         super().__init__()
         self.interface = parent_widget
-        if isinstance(self.interface, QWidget):
-            self.button_layout = QHBoxLayout(self.interface)
+        self.clipboard_instance = None
+        if isinstance(self.interface, QHBoxLayout):
+            self.button_widget = QWidget()
+            self.button_layout = QHBoxLayout(self.button_widget)
             self.button_layout.setContentsMargins(0, 0, 0, 0)
         else:
-            raise TypeError(f"Expectec self.interface to be a QWidget but got {type(self.interface)}")
+            raise TypeError(f"Expected self.interface to be a QWidget but got {type(self.interface)}")
 
         self.icon_path = os.path.join(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'images'))
         
@@ -59,6 +61,8 @@ class CreateButtons(QWidget):
         R_spacer = QSpacerItem(20,40,QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_layout.addSpacerItem(R_spacer)
 
+        self.interface.addWidget(self.button_widget)
+
     def default_values(self):
         default_value = QPushButton()
         default_value.setObjectName("button_defaultvalue")
@@ -75,6 +79,7 @@ class CreateButtons(QWidget):
         copy_position.setIconSize(QSize(25,25))
         copy_position.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(copy_position)
+        QObject.connect(copy_position, SIGNAL("clicked()"), lambda: self.handle_clipboard(button="copy"))
 
     def paste_pos(self):
         paste_position = QPushButton()
@@ -83,6 +88,16 @@ class CreateButtons(QWidget):
         paste_position.setIconSize(QSize(25,25))
         paste_position.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(paste_position)
+        QObject.connect(paste_position, SIGNAL("clicked()"), lambda: self.handle_clipboard(button="paste"))
+
+    def handle_clipboard(self, button):
+        if button == "copy": 
+            self.clipboard_instance = None
+        if self.clipboard_instance is None:
+            self.clipboard_instance = clipboard.CopyNPaste()
+        else:
+            self.clipboard_instance.paste()
+
 
     def isolate_character(self):
         isolate = QPushButton()

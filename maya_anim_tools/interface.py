@@ -32,9 +32,9 @@ except ModuleNotFoundError:
                                    QLineEdit)
     from shiboken2 import wrapInstance
 
-from user_interface.pages import buttons
+from user_interface.pages import buttons, tween_ui
 
-module_list = [buttons]
+module_list = [buttons, tween_ui]
 for module in module_list:
     importlib.reload(module)
 
@@ -90,11 +90,12 @@ class AnimToolsInterface(QWidget):
         self.widget.setContentsMargins(5, 5, 5, 5)
         self.widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        """self.horizontal_layout = QHBoxLayout(self.widget)
-        self.horizontal_layout.setContentsMargins(5, 5, 5, 5)
-        self.horizontal_layout.setSpacing(5)"""
+        self.horizontal_layout = QHBoxLayout(self.widget)
+        self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
+        self.horizontal_layout.setSpacing(5)
 
-        buttons_instance = buttons.CreateButtons(parent_widget=self.widget)
+        tween_instance = tween_ui.CreateTweenUI(parent_widget=self.horizontal_layout)
+        buttons_instance = buttons.CreateButtons(parent_widget=self.horizontal_layout)
 
         #horizontal_layout = QVBoxLayout(self)
         #horizontal_layout.addWidget(self.widget)
