@@ -26,9 +26,9 @@ except ModuleNotFoundError:
                                    QLineEdit,
                                    QSpacerItem)
 
-from tools import reset_default, clipboard
+from tools import reset_default, clipboard, ghosting, follow_cam
 
-module_list = [reset_default, clipboard]
+module_list = [reset_default, clipboard, ghosting, follow_cam]
 for module in module_list:
     importlib.reload(module)
 
@@ -114,6 +114,7 @@ class CreateButtons(QWidget):
         camera.setIconSize(QSize(25,25))
         camera.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(camera)
+        QObject.connect(camera, SIGNAL("clicked()"), lambda: follow_cam.create_cam())
 
     def ghosting(self):
         ghost = QPushButton()
@@ -122,6 +123,7 @@ class CreateButtons(QWidget):
         ghost.setIconSize(QSize(25,25))
         ghost.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(ghost)
+        QObject.connect(ghost, SIGNAL("clicked()"), lambda: ghosting.ObjectGhosting())
 
     def sel_h(self):
         tree = QPushButton()
