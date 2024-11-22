@@ -26,9 +26,9 @@ except ModuleNotFoundError:
                                    QLineEdit,
                                    QSpacerItem)
 
-from tools import reset_default, clipboard, ghosting, follow_cam
+from tools import reset_default, clipboard, ghosting, follow_cam, playback_speed
 
-module_list = [reset_default, clipboard, ghosting, follow_cam]
+module_list = [reset_default, clipboard, ghosting, follow_cam, playback_speed]
 for module in module_list:
     importlib.reload(module)
 
@@ -57,6 +57,7 @@ class CreateButtons(QWidget):
         self.follow_camera()
         self.ghosting()
         self.sel_h()
+        self.playback()
 
         R_spacer = QSpacerItem(20,40,QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.button_layout.addSpacerItem(R_spacer)
@@ -133,3 +134,11 @@ class CreateButtons(QWidget):
         tree.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(tree)
 
+    def playback(self):
+        speed = QPushButton()
+        speed.setObjectName("button_playback")
+        speed.setIcon(QIcon(f"{self.icon_path}/playback.png"))
+        speed.setIconSize(QSize(25,25))
+        speed.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.button_layout.addWidget(speed)
+        QObject.connect(speed, SIGNAL("clicked()"), lambda: playback_speed.set_playback_speed())
