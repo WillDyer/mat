@@ -26,9 +26,9 @@ except ModuleNotFoundError:
                                    QLineEdit,
                                    QSpacerItem)
 
-from tools import reset_default, clipboard, ghosting, follow_cam, playback_speed
+from tools import reset_default, clipboard, ghosting, follow_cam, playback_speed, select_h
 
-module_list = [reset_default, clipboard, ghosting, follow_cam, playback_speed]
+module_list = [reset_default, clipboard, ghosting, follow_cam, playback_speed, select_h]
 for module in module_list:
     importlib.reload(module)
 
@@ -133,6 +133,7 @@ class CreateButtons(QWidget):
         tree.setIconSize(QSize(25,25))
         tree.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.button_layout.addWidget(tree)
+        QObject.connect(tree, SIGNAL("clicked()"), lambda: select_h.select())
 
     def playback(self):
         speed = QPushButton()
